@@ -2,7 +2,7 @@ const { addHours, format } = require("date-fns");
 const fs = require("fs");
 const { google } = require("googleapis");
 const { authorize } = require("./getAuth");
-const fixtures = fs.readFileSync("2024.csv", "utf8");
+const fixtures = fs.readFileSync("2025.tsv", "utf8");
 
 const calendarId = "YOUR_CALENDAR_ID";
 
@@ -15,7 +15,7 @@ const jsonToEvent = ({
   hour,
   location,
 }) => {
-  const startTimeRaw = `2024-${month.padStart(2, "0")}-${day.padStart(
+  const startTimeRaw = `2025-${month.padStart(2, "0")}-${day.padStart(
     2,
     "0"
   )}T${hour}:00`;
@@ -32,7 +32,9 @@ const jsonToEvent = ({
 
   const isHome = homeOrAway === "H";
 
-  const description = `2024 K리그2 ${round}R ${isHome ? "성남" : team} vs ${isHome ? team : "성남"}`
+  const description = `2025 K리그2 ${round}R ${isHome ? "성남" : team} vs ${
+    isHome ? team : "성남"
+  }`;
 
   return {
     summary: `${team} ${homeOrAway}`,
@@ -66,20 +68,18 @@ const fixtureData = fixtures
 const addEvent = async (auth) => {
   const calendar = google.calendar({ version: "v3", auth });
 
-  const res = await Promise.all(
-    fixtureData.map((event) =>
-      calendar.events.insert({
-        auth,
-        calendarId,
-        resource: event,
-      })
-    )
-  );
+  for await (const event of fixtureData) {
+    const res = await calendar.events.insert({
+      auth,
+      calendarId,
+      resource: event,
+    });
 
-  console.log(res);
+    console.log(res);
+  }
 };
 
 (async () => {
   const auth = await authorize();
   await addEvent(auth);
-})()
+})();
